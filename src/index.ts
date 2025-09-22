@@ -27,11 +27,11 @@ app.post('/github-webhook', (req, res) => {
   webhookRoutes.handleGitHubWebhook(req, res);
 });
 
-app.get('/health', (req, res) => {
+app.get('/github-webhook/health', (req, res) => {
   webhookRoutes.healthCheck(req, res);
 });
 
-app.get('/repositories', (req, res) => {
+app.get('/github-webhook/repositories', (req, res) => {
   webhookRoutes.getRepositoriesStatus(req, res);
 });
 
@@ -43,8 +43,8 @@ app.get('/', (req, res) => {
     status: 'running',
     endpoints: {
       webhook: '/github-webhook',
-      health: '/health',
-      repositories: '/repositories'
+      health: '/github-webhook/health',
+      repositories: '/github-webhook/repositories'
     }
   });
 });
@@ -71,8 +71,8 @@ app.listen(PORT, () => {
   console.log(`🚀 Redeployment Service started on port ${PORT}`);
   console.log(`📁 Monitoring apps directory: ${APPS_DIR}`);
   console.log(`🔗 Webhook endpoint: http://localhost:${PORT}/github-webhook`);
-  console.log(`❤️  Health check: http://localhost:${PORT}/health`);
-  console.log(`📊 Repositories status: http://localhost:${PORT}/repositories`);
+  console.log(`❤️  Health check: http://localhost:${PORT}/github-webhook/health`);
+  console.log(`📊 Repositories status: http://localhost:${PORT}/github-webhook/repositories`);
 });
 
 // Graceful shutdown
