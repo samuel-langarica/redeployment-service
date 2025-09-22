@@ -25,5 +25,5 @@ services:
       - "traefik.http.services.redeployment-service.loadbalancer.server.port=3000"
 
 networks:
-  traefik:
+  web:
     external: true
