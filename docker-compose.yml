@@ -16,7 +16,7 @@ services:
       - .env
     restart: unless-stopped
     networks:
-      - traefik
+      - web
     labels:
       # Traefik labels for routing
       - "traefik.enable=true"
