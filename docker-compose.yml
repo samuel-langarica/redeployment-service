@@ -1,0 +1,23 @@
+version: '3.8'
+
+services:
+  redeployment-service:
+    build: .
+    ports:
+      - "3000:3000"
+    volumes:
+      # Mount SSH keys for GitHub access
+      - ~/.ssh:/root/.ssh:ro
+      # Mount apps directory
+      - ~/apps:/apps:rw
+    environment:
+      - NODE_ENV=production
+    env_file:
+      - .env
+    restart: unless-stopped
+    labels:
+      # Traefik labels for routing
+      - "traefik.enable=true"
+      - "traefik.http.routers.redeployment-service.rule=PathPrefix(`/github-webhook`)"
+      - "traefik.http.routers.redeployment-service.entrypoints=web"
+      - "traefik.http.services.redeployment-service.loadbalancer.server.port=3000"
