@@ -35,6 +35,11 @@ app.get('/github-webhook/repositories', (req, res) => {
   webhookRoutes.getRepositoriesStatus(req, res);
 });
 
+// Health endpoint for Traefik routing (after strip prefix)
+app.get('/health', (req, res) => {
+  webhookRoutes.healthCheck(req, res);
+});
+
 // Root endpoint
 app.get('/', (req, res) => {
   res.json({
