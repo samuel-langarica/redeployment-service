@@ -1,8 +1,6 @@
 services:
   redeployment-service:
     build: .
-    ports:
-      - "3000:3000"
     volumes:
       # Mount SSH keys for GitHub access
       - ~/.ssh:/root/.ssh:ro
@@ -20,7 +18,7 @@ services:
     labels:
       # Traefik labels for routing
       - "traefik.enable=true"
-      - "traefik.http.routers.redeployment-service.rule=PathPrefix(`/redeployment-service`)"
+      - "traefik.http.routers.redeployment-service.rule=Host(`184.107.141.137`) && PathPrefix(`/redeployment-service`)"
       - "traefik.http.routers.redeployment-service.entrypoints=web"
       - "traefik.http.routers.redeployment-service.service=redeployment-service"
       - "traefik.http.services.redeployment-service.loadbalancer.server.port=3000"
