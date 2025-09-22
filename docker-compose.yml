@@ -20,7 +20,8 @@ services:
     labels:
       # Traefik labels for routing
       - "traefik.enable=true"
-      - "traefik.http.routers.redeployment-service.rule=PathPrefix(`/github-webhook`)"
+      - "traefik.http.routers.redeployment-service.rule=Host(`184.107.141.137`) && PathPrefix(`/github-webhook`)"
+      - "traefik.http.routers.redeployment-service.priority=100"
       - "traefik.http.routers.redeployment-service.entrypoints=web"
       - "traefik.http.services.redeployment-service.loadbalancer.server.port=3000"
 
