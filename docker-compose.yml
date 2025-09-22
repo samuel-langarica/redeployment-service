@@ -8,6 +8,8 @@ services:
       - ~/.ssh:/root/.ssh:ro
       # Mount apps directory
       - ~/apps:/apps:rw
+      # Mount Docker socket for Docker operations
+      - /var/run/docker.sock:/var/run/docker.sock:ro
     environment:
       - NODE_ENV=production
     env_file:

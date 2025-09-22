@@ -3,8 +3,8 @@ FROM node:18-alpine
 
 WORKDIR /app
 
-# Install git for repository operations
-RUN apk add --no-cache git openssh-client
+# Install git, Docker CLI, and Docker Compose for repository operations
+RUN apk add --no-cache git openssh-client docker-cli docker-compose
 
 # Copy package files
 COPY package*.json ./
