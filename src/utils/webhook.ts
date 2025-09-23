@@ -17,7 +17,7 @@ export class WebhookValidator {
     }
 
     const expectedSignature = this.generateSignature(payload);
-    const providedSignature = signature.replace('sha256=', '');
+    const providedSignature = signature.replace('=', '');
 
     // Use timing-safe comparison to prevent timing attacks
     return this.timingSafeEqual(expectedSignature, providedSignature);

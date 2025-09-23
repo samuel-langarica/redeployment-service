@@ -86,8 +86,11 @@ export class DeploymentService {
       
       console.log(`Pulled ${repo.name}`);
       
+      // Check permissions first
+      const permissionCheck = await this.dockerManager.checkPermissions(repo.path, repo.name);
+      console.log(`🔐 Permission check:`, permissionCheck);
+      
       // Fix common Python package issues before deployment
-      console.log(`🔧 Checking for Python package issues in ${repo.name}`);
       const fixResult = await this.dockerManager.fixPythonPackageIssues(repo.path, repo.name);
       if (fixResult !== 'No fixes needed') {
         console.log(`🔧 Applied fixes: ${fixResult}`);
@@ -96,18 +99,14 @@ export class DeploymentService {
       // Deploy with Docker Compose
       const deployResult = await this.dockerManager.deployRepository(repo.path, repo.name);
       
-      // Always get debugging info to help diagnose issues
-      console.log(`🔍 Getting debug info for ${repo.name}`);
-      const debugInfo = await this.dockerManager.getContainerDebugInfo(repo.path, repo.name);
-      console.log(`📋 Debug info for ${repo.name}:`, debugInfo);
-      
       // If deployment failed, get additional debugging info
       if (!deployResult.success) {
+        console.log(`🔍 Getting debug info for failed deployment: ${repo.name}`);
         const logs = await this.dockerManager.getContainerLogs(repo.path, repo.name, 100);
         const status = await this.dockerManager.getContainerStatus(repo.path, repo.name);
         
-        console.log(`📋 Container status for ${repo.name}:`, status);
-        console.log(`📋 Recent logs for ${repo.name}:`, logs);
+        console.log(`📋 Container status:`, status);
+        console.log(`📋 Recent logs:`, logs);
       }
       
       return {

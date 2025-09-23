@@ -60,6 +60,26 @@ export class DockerManager {
         };
       }
       
+      // Wait a moment for containers to fully start
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      
+      // Check if containers are actually running
+      const { stdout: statusOutput } = await execAsync(
+        `cd "${repoPath}" && docker compose ps --format "table {{.Name}}\\t{{.Status}}"`,
+        { timeout: 10000 }
+      );
+      
+      console.log(`Container status for ${repoName}:`, statusOutput);
+      
+      // Check if any containers are not running
+      if (statusOutput.includes('Exited') || statusOutput.includes('Dead') || statusOutput.includes('Restarting')) {
+        console.error(`Container not running properly for ${repoName}`);
+        return {
+          success: false,
+          message: `Container failed to start properly: ${statusOutput}`
+        };
+      }
+      
       console.log(`✅ Deployed ${repoName}`);
       return {
         success: true,
@@ -190,6 +210,66 @@ export class DockerManager {
       return fixes.length > 0 ? fixes.join(', ') : 'No fixes needed';
     } catch (error: any) {
       return `Error fixing Python package issues: ${error.message}`;
+    }
+  }
+
+  /**
+   * Execute command with detailed logging
+   */
+  async executeCommand(command: string, description: string, timeout: number = 30000): Promise<{ stdout: string; stderr: string; success: boolean }> {
+    try {
+      console.log(`🔧 Executing: ${description}`);
+      console.log(`📝 Command: ${command}`);
+      
+      const { stdout, stderr } = await execAsync(command, { timeout });
+      
+      if (stderr && stderr.trim()) {
+        console.log(`📤 Stderr: ${stderr.trim()}`);
+      }
+      
+      return { stdout, stderr, success: true };
+    } catch (error: any) {
+      console.error(`❌ Command failed: ${description}`);
+      console.error(`📝 Command: ${command}`);
+      console.error(`📤 Error: ${error.message}`);
+      if (error.stderr) {
+        console.error(`📤 Stderr: ${error.stderr}`);
+      }
+      
+      return { 
+        stdout: error.stdout || '', 
+        stderr: error.stderr || error.message, 
+        success: false 
+      };
+    }
+  }
+
+  /**
+   * Check permissions and directory structure
+   */
+  async checkPermissions(repoPath: string, repoName: string): Promise<string> {
+    try {
+      const checks = [
+        `ls -la "${repoPath}"`,
+        `ls -la "${repoPath}/app" 2>/dev/null || echo "app directory not found"`,
+        `test -r "${repoPath}/docker-compose.yml" && echo "docker-compose.yml readable" || echo "docker-compose.yml not readable"`,
+        `test -r "${repoPath}/Dockerfile" && echo "Dockerfile readable" || echo "Dockerfile not readable"`
+      ];
+      
+      let result = `=== Permission Check for ${repoName} ===\n`;
+      
+      for (const check of checks) {
+        try {
+          const { stdout } = await execAsync(check, { timeout: 5000 });
+          result += `\n--- ${check} ---\n${stdout}\n`;
+        } catch (error: any) {
+          result += `\n--- ${check} ---\nError: ${error.message}\n`;
+        }
+      }
+      
+      return result;
+    } catch (error: any) {
+      return `Error checking permissions: ${error.message}`;
     }
   }
 }
