@@ -29,11 +29,26 @@ export class DockerManager {
         { timeout: 30000 }
       ).catch(() => {}); // Ignore errors for cleanup
       
-      // Then build and start containers with clean rebuild
-      console.log(`docker compose up --build --no-cache --force-recreate -d → ${repoName}`);
-      const { stdout: upOutput, stderr: upError } = await execAsync(
-        `cd "${repoPath}" && docker compose up --build --no-cache --force-recreate -d`,
+      // Build with no cache first, then start containers
+      console.log(`docker compose build --no-cache → ${repoName}`);
+      const { stdout: buildOutput, stderr: buildError } = await execAsync(
+        `cd "${repoPath}" && docker compose build --no-cache`,
         { timeout: 300000 } // 5 minute timeout for build
+      );
+      
+      if (buildError && (buildError.includes('ERROR') || buildError.includes('error') || buildError.includes('failed'))) {
+        console.error(`build error ${repoName}:`, buildError);
+        return {
+          success: false,
+          message: `Docker Compose build error: ${buildError}`
+        };
+      }
+      
+      // Then start containers with force recreate
+      console.log(`docker compose up --force-recreate -d → ${repoName}`);
+      const { stdout: upOutput, stderr: upError } = await execAsync(
+        `cd "${repoPath}" && docker compose up --force-recreate -d`,
+        { timeout: 60000 } // 1 minute timeout for start
       );
       
       // Docker Compose writes progress to stderr even on success, so we need to check for actual errors
@@ -48,7 +63,7 @@ export class DockerManager {
       console.log(`✅ Deployed ${repoName}`);
       return {
         success: true,
-        message: `Successfully deployed ${repoName}. Output: ${upOutput.trim()}`
+        message: `Successfully deployed ${repoName}. Build: ${buildOutput.trim()}, Start: ${upOutput.trim()}`
       };
       
     } catch (error: any) {
