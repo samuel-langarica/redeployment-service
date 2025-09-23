@@ -9,21 +9,21 @@ export class DockerManager {
    */
   async deployRepository(repoPath: string, repoName: string): Promise<{ success: boolean; message: string }> {
     try {
-      console.log(`Starting deployment for ${repoName} in ${repoPath}`);
+      console.log(`🐳 Deploy ${repoName} @ ${repoPath}`);
       
       // First, stop and remove containers
-      console.log(`Stopping containers for ${repoName}...`);
+      console.log(`docker compose down → ${repoName}`);
       const { stdout: downOutput, stderr: downError } = await execAsync(
         `cd "${repoPath}" && docker compose down`,
         { timeout: 60000 } // 60 second timeout
       );
       
       if (downError && !downError.includes('No containers to stop')) {
-        console.warn(`Warning during docker compose down for ${repoName}:`, downError);
+        console.warn(`down warning ${repoName}:`, downError);
       }
       
       // Then build and start containers
-      console.log(`Building and starting containers for ${repoName}...`);
+      console.log(`docker compose up --build -d → ${repoName}`);
       const { stdout: upOutput, stderr: upError } = await execAsync(
         `cd "${repoPath}" && docker compose up --build -d`,
         { timeout: 300000 } // 5 minute timeout for build
@@ -31,19 +31,14 @@ export class DockerManager {
       
       // Docker Compose writes progress to stderr even on success, so we need to check for actual errors
       if (upError && (upError.includes('ERROR') || upError.includes('error') || upError.includes('failed'))) {
-        console.error(`Error during docker compose up for ${repoName}:`, upError);
+        console.error(`up error ${repoName}:`, upError);
         return {
           success: false,
           message: `Docker Compose error: ${upError}`
         };
       }
       
-      // Log the output for debugging
-      if (upError) {
-        console.log(`Docker Compose output for ${repoName}:`, upError);
-      }
-      
-      console.log(`Successfully deployed ${repoName}`);
+      console.log(`✅ Deployed ${repoName}`);
       return {
         success: true,
         message: `Successfully deployed ${repoName}. Output: ${upOutput.trim()}`
@@ -51,7 +46,7 @@ export class DockerManager {
       
     } catch (error: any) {
       const errorMessage = error.stderr || error.message || 'Unknown error';
-      console.error(`Error deploying ${repoName}:`, errorMessage);
+      console.error(`deploy error ${repoName}:`, errorMessage);
       
       return {
         success: false,

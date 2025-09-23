@@ -31,27 +31,25 @@ export class WebhookRoutes {
       // Check if it's a push event
       const eventType = req.headers['x-github-event'] as string;
       if (eventType !== 'push') {
-        console.log(`Ignoring event type: ${eventType}`);
+        console.log(`Ignoring event: ${eventType}`);
         res.status(200).json({ message: 'Event ignored' });
         return;
       }
 
       const pushEvent: GitHubPushEvent = req.body;
       
-      // Log the push event
-      console.log(`Received push event for ${pushEvent.repository.name} on ${pushEvent.ref}`);
-      console.log(`Commit: ${pushEvent.head_commit.id} by ${pushEvent.pusher.name}`);
-      console.log(`Message: ${pushEvent.head_commit.message}`);
+      // Minimal push summary
+      console.log(`Push ${pushEvent.repository.name}@${pushEvent.ref} commit ${pushEvent.head_commit.id}`);
 
       // Process the deployment
       const results = await this.deploymentService.processPushEvent(pushEvent);
 
-      // Log results
+      // Deployment summary
       results.forEach(result => {
         if (result.success) {
-          console.log(`✅ Successfully deployed ${result.repository}:${result.branch}`);
+          console.log(`✅ Deployed ${result.repository}:${result.branch}`);
         } else {
-          console.error(`❌ Failed to deploy ${result.repository}:${result.branch} - ${result.message}`);
+          console.error(`❌ Deploy failed ${result.repository}:${result.branch} - ${result.message}`);
         }
       });
 

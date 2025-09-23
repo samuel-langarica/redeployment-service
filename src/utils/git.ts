@@ -18,40 +18,28 @@ export class GitManager {
     const repositories: RepositoryInfo[] = [];
     
     try {
-      console.log(`🔍 Scanning directory: ${this.appsDir}`);
+      console.log(`🔍 Scanning ${this.appsDir} for repositories`);
       
       const { stdout } = await execAsync(`ls -la "${this.appsDir}"`);
-      console.log(`📁 Directory listing:`, stdout);
-      
       const lines = stdout.split('\n').filter(line => line.startsWith('d'));
-      console.log(`📂 Found ${lines.length} directories:`, lines);
       
       for (const line of lines) {
         const parts = line.split(/\s+/);
         const folderName = parts[parts.length - 1];
         
-        console.log(`🔍 Processing folder: ${folderName}`);
-        
-        // Skip hidden directories and the redeployment-service itself
         if (folderName.startsWith('.') || folderName === 'redeployment-service') {
-          console.log(`⏭️  Skipping ${folderName} (hidden or redeployment-service)`);
           continue;
         }
         
         const repoPath = `${this.appsDir}/${folderName}`;
-        console.log(`📂 Checking repository at: ${repoPath}`);
-        
         const repoInfo = await this.getRepositoryInfo(folderName, repoPath);
         
         if (repoInfo) {
-          console.log(`✅ Found valid repository:`, repoInfo);
           repositories.push(repoInfo);
-        } else {
-          console.log(`❌ Invalid repository: ${folderName}`);
         }
       }
       
-      console.log(`📊 Total repositories found: ${repositories.length}`);
+      console.log(`📊 Repositories discovered: ${repositories.length}`);
     } catch (error) {
       console.error('Error scanning repositories:', error);
     }
@@ -64,8 +52,6 @@ export class GitManager {
    */
   private async getRepositoryInfo(name: string, path: string): Promise<RepositoryInfo | null> {
     try {
-      console.log(`🔍 Checking if ${name} is a git repository...`);
-      
       // Check if it's a git repository - try multiple methods
       let isGitRepo = false;
       
@@ -74,35 +60,28 @@ export class GitManager {
         const { stdout: gitDirCheck } = await execAsync(`test -d "${path}/.git" && echo "true" || echo "false"`);
         if (gitDirCheck.trim() === 'true') {
           isGitRepo = true;
-          console.log(`📋 ${name} has .git directory`);
         } else {
           // Method 2: Try git rev-parse
           const { stdout: revParseCheck } = await execAsync(`cd "${path}" && git rev-parse --is-inside-work-tree 2>/dev/null || echo "false"`);
           isGitRepo = revParseCheck.trim() === 'true';
-          console.log(`📋 Git rev-parse result for ${name}: ${revParseCheck.trim()}`);
         }
       } catch (error) {
-        console.log(`📋 Error checking git status for ${name}:`, error);
+        console.log(`git check error for ${name}:`, error);
         isGitRepo = false;
       }
       
       if (!isGitRepo) {
-        console.log(`❌ ${name} is not a git repository`);
         return null;
       }
-
-      console.log(`✅ ${name} is a git repository, getting branch...`);
       
       // Configure git to trust this directory (fixes dubious ownership issue)
       await execAsync(`git config --global --add safe.directory "${path}"`);
       
       // Get current branch
       const { stdout: currentBranch } = await execAsync(`cd "${path}" && git branch --show-current`);
-      console.log(`🌿 Current branch for ${name}: ${currentBranch.trim()}`);
       
       // Check if docker-compose.yml exists
       const { stdout: hasDockerCompose } = await execAsync(`cd "${path}" && test -f docker-compose.yml && echo "true" || echo "false"`);
-      console.log(`🐳 Docker compose check for ${name}: ${hasDockerCompose.trim()}`);
       
       const repoInfo = {
         name,
@@ -110,8 +89,6 @@ export class GitManager {
         currentBranch: currentBranch.trim(),
         hasDockerCompose: hasDockerCompose.trim() === 'true'
       };
-      
-      console.log(`📊 Repository info for ${name}:`, repoInfo);
       
       return repoInfo;
     } catch (error) {
@@ -125,8 +102,6 @@ export class GitManager {
    */
   async pullLatestChanges(repoPath: string, branch: string): Promise<{ success: boolean; message: string }> {
     try {
-      console.log(`Pulling latest changes for ${repoPath} on branch ${branch}`);
-      
       // Configure git to trust this directory (fixes dubious ownership issue)
       await execAsync(`git config --global --add safe.directory "${repoPath}"`);
       

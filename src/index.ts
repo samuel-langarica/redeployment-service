@@ -19,42 +19,10 @@ const app = express();
 app.use(express.json({ limit: '10mb' })); // GitHub webhooks can be large
 app.use(express.urlencoded({ extended: true }));
 
-// Request logging middleware (after JSON parsing)
+// Minimal request logging
 app.use((req, res, next) => {
   const timestamp = new Date().toISOString();
-  const method = req.method;
-  const url = req.url;
-  const userAgent = req.get('User-Agent') || 'Unknown';
-  const ip = req.ip || req.connection.remoteAddress || 'Unknown';
-  
-  console.log(`📥 [${timestamp}] ${method} ${url} - IP: ${ip} - User-Agent: ${userAgent}`);
-  
-  // Log request body for POST requests (but truncate large payloads)
-  if (req.method === 'POST' && req.body) {
-    const bodyStr = JSON.stringify(req.body);
-    if (bodyStr.length > 1000) {
-      console.log(`📦 Request body (truncated): ${bodyStr.substring(0, 1000)}...`);
-    } else {
-      console.log(`📦 Request body: ${bodyStr}`);
-    }
-  }
-  
-  // Log headers for debugging
-  console.log(`📋 Headers:`, JSON.stringify(req.headers, null, 2));
-  
-  // Log response
-  const originalSend = res.send;
-  res.send = function(data) {
-    const responseTimestamp = new Date().toISOString();
-    console.log(`📤 [${responseTimestamp}] Response ${res.statusCode} for ${method} ${url}`);
-    if (data && typeof data === 'string' && data.length < 500) {
-      console.log(`📤 Response body: ${data}`);
-    } else if (data) {
-      console.log(`📤 Response body (truncated): ${String(data).substring(0, 500)}...`);
-    }
-    return originalSend.call(this, data);
-  };
-  
+  console.log(`📥 [${timestamp}] ${req.method} ${req.url}`);
   next();
 });
 
@@ -109,9 +77,6 @@ app.use((req, res) => {
 app.listen(PORT, () => {
   console.log(`🚀 Redeployment Service started on port ${PORT}`);
   console.log(`📁 Monitoring apps directory: ${APPS_DIR}`);
-  console.log(`🔗 Webhook endpoint: http://184.107.141.137:3000/github-webhook`);
-  console.log(`❤️  Health check: http://184.107.141.137:3000/health`);
-  console.log(`📊 Repositories status: http://184.107.141.137:3000/repositories`);
 });
 
 // Graceful shutdown

@@ -22,11 +22,11 @@ export class DeploymentService {
       const pushedRepoName = pushEvent.repository.name;
       const pushedBranch = this.extractBranchFromRef(pushEvent.ref);
       
-      console.log(`Processing push event for ${pushedRepoName} on branch ${pushedBranch}`);
+      console.log(`Process push ${pushedRepoName}:${pushedBranch}`);
       
       // Get all repositories in the apps directory
       const repositories = await this.gitManager.getRepositories();
-      console.log(`Found ${repositories.length} repositories in apps directory`);
+      console.log(`Repos in apps dir: ${repositories.length}`);
       
       // Find matching repositories
       const matchingRepos = repositories.filter(repo => {
@@ -35,10 +35,10 @@ export class DeploymentService {
                repo.hasDockerCompose;
       });
       
-      console.log(`Found ${matchingRepos.length} matching repositories for deployment`);
+      console.log(`Matching for deploy: ${matchingRepos.length}`);
       
       if (matchingRepos.length === 0) {
-        console.log(`No matching repositories found for ${pushedRepoName}:${pushedBranch}`);
+        console.log(`No matches for ${pushedRepoName}:${pushedBranch}`);
         return results;
       }
       
@@ -69,7 +69,7 @@ export class DeploymentService {
     const startTime = new Date();
     
     try {
-      console.log(`Starting deployment for ${repo.name} on branch ${branch}`);
+      console.log(`Start deploy ${repo.name}:${branch}`);
       
       // Pull latest changes
       const pullResult = await this.gitManager.pullLatestChanges(repo.path, branch);
@@ -84,7 +84,7 @@ export class DeploymentService {
         };
       }
       
-      console.log(`Successfully pulled changes for ${repo.name}: ${pullResult.message}`);
+      console.log(`Pulled ${repo.name}`);
       
       // Deploy with Docker Compose
       const deployResult = await this.dockerManager.deployRepository(repo.path, repo.name);
@@ -98,7 +98,7 @@ export class DeploymentService {
       };
       
     } catch (error) {
-      console.error(`Error deploying ${repo.name}:`, error);
+      console.error(`Deploy error ${repo.name}:`, error);
       return {
         repository: repo.name,
         branch,
