@@ -81,9 +81,9 @@ app.get('/', (req, res) => {
     version: '1.0.0',
     status: 'running',
     endpoints: {
-      webhook: 'http://5.78.108.80:3000/github-webhook',
-      health: 'http://5.78.108.80:3000/health',
-      repositories: 'http://5.78.108.80:3000/repositories'
+      webhook: 'http://184.107.141.137:3000/github-webhook',
+      health: 'http://184.107.141.137:3000/health',
+      repositories: 'http://184.107.141.137:3000/repositories'
     }
   });
 });
@@ -109,9 +109,9 @@ app.use((req, res) => {
 app.listen(PORT, () => {
   console.log(`🚀 Redeployment Service started on port ${PORT}`);
   console.log(`📁 Monitoring apps directory: ${APPS_DIR}`);
-  console.log(`🔗 Webhook endpoint: http://5.78.108.80:3000/github-webhook`);
-  console.log(`❤️  Health check: http://5.78.108.80:3000/health`);
-  console.log(`📊 Repositories status: http://5.78.108.80:3000/repositories`);
+  console.log(`🔗 Webhook endpoint: http://184.107.141.137:3000/github-webhook`);
+  console.log(`❤️  Health check: http://184.107.141.137:3000/health`);
+  console.log(`📊 Repositories status: http://184.107.141.137:3000/repositories`);
 });
 
 // Graceful shutdown
