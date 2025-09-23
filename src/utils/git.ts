@@ -18,25 +18,40 @@ export class GitManager {
     const repositories: RepositoryInfo[] = [];
     
     try {
+      console.log(`🔍 Scanning directory: ${this.appsDir}`);
+      
       const { stdout } = await execAsync(`ls -la "${this.appsDir}"`);
+      console.log(`📁 Directory listing:`, stdout);
+      
       const lines = stdout.split('\n').filter(line => line.startsWith('d'));
+      console.log(`📂 Found ${lines.length} directories:`, lines);
       
       for (const line of lines) {
         const parts = line.split(/\s+/);
         const folderName = parts[parts.length - 1];
         
+        console.log(`🔍 Processing folder: ${folderName}`);
+        
         // Skip hidden directories and the redeployment-service itself
         if (folderName.startsWith('.') || folderName === 'redeployment-service') {
+          console.log(`⏭️  Skipping ${folderName} (hidden or redeployment-service)`);
           continue;
         }
         
         const repoPath = `${this.appsDir}/${folderName}`;
+        console.log(`📂 Checking repository at: ${repoPath}`);
+        
         const repoInfo = await this.getRepositoryInfo(folderName, repoPath);
         
         if (repoInfo) {
+          console.log(`✅ Found valid repository:`, repoInfo);
           repositories.push(repoInfo);
+        } else {
+          console.log(`❌ Invalid repository: ${folderName}`);
         }
       }
+      
+      console.log(`📊 Total repositories found: ${repositories.length}`);
     } catch (error) {
       console.error('Error scanning repositories:', error);
     }
@@ -49,25 +64,37 @@ export class GitManager {
    */
   private async getRepositoryInfo(name: string, path: string): Promise<RepositoryInfo | null> {
     try {
+      console.log(`🔍 Checking if ${name} is a git repository...`);
+      
       // Check if it's a git repository
       const { stdout: isGitRepo } = await execAsync(`cd "${path}" && git rev-parse --is-inside-work-tree 2>/dev/null || echo "false"`);
+      console.log(`📋 Git repo check result for ${name}: ${isGitRepo.trim()}`);
       
       if (isGitRepo.trim() !== 'true') {
+        console.log(`❌ ${name} is not a git repository`);
         return null;
       }
 
+      console.log(`✅ ${name} is a git repository, getting branch...`);
+      
       // Get current branch
       const { stdout: currentBranch } = await execAsync(`cd "${path}" && git branch --show-current`);
+      console.log(`🌿 Current branch for ${name}: ${currentBranch.trim()}`);
       
       // Check if docker-compose.yml exists
       const { stdout: hasDockerCompose } = await execAsync(`cd "${path}" && test -f docker-compose.yml && echo "true" || echo "false"`);
+      console.log(`🐳 Docker compose check for ${name}: ${hasDockerCompose.trim()}`);
       
-      return {
+      const repoInfo = {
         name,
         path,
         currentBranch: currentBranch.trim(),
         hasDockerCompose: hasDockerCompose.trim() === 'true'
       };
+      
+      console.log(`📊 Repository info for ${name}:`, repoInfo);
+      
+      return repoInfo;
     } catch (error) {
       console.error(`Error getting info for repository ${name}:`, error);
       return null;
