@@ -93,6 +93,9 @@ export class GitManager {
 
       console.log(`✅ ${name} is a git repository, getting branch...`);
       
+      // Configure git to trust this directory (fixes dubious ownership issue)
+      await execAsync(`git config --global --add safe.directory "${path}"`);
+      
       // Get current branch
       const { stdout: currentBranch } = await execAsync(`cd "${path}" && git branch --show-current`);
       console.log(`🌿 Current branch for ${name}: ${currentBranch.trim()}`);
@@ -123,6 +126,9 @@ export class GitManager {
   async pullLatestChanges(repoPath: string, branch: string): Promise<{ success: boolean; message: string }> {
     try {
       console.log(`Pulling latest changes for ${repoPath} on branch ${branch}`);
+      
+      // Configure git to trust this directory (fixes dubious ownership issue)
+      await execAsync(`git config --global --add safe.directory "${repoPath}"`);
       
       const { stdout, stderr } = await execAsync(`cd "${repoPath}" && git pull origin ${branch}`);
       
