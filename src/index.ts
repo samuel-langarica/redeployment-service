@@ -15,6 +15,45 @@ if (!GITHUB_WEBHOOK_SECRET) {
 // Create Express app
 const app = express();
 
+// Request logging middleware
+app.use((req, res, next) => {
+  const timestamp = new Date().toISOString();
+  const method = req.method;
+  const url = req.url;
+  const userAgent = req.get('User-Agent') || 'Unknown';
+  const ip = req.ip || req.connection.remoteAddress || 'Unknown';
+  
+  console.log(`📥 [${timestamp}] ${method} ${url} - IP: ${ip} - User-Agent: ${userAgent}`);
+  
+  // Log request body for POST requests (but truncate large payloads)
+  if (req.method === 'POST' && req.body) {
+    const bodyStr = JSON.stringify(req.body);
+    if (bodyStr.length > 1000) {
+      console.log(`📦 Request body (truncated): ${bodyStr.substring(0, 1000)}...`);
+    } else {
+      console.log(`📦 Request body: ${bodyStr}`);
+    }
+  }
+  
+  // Log headers for debugging
+  console.log(`📋 Headers:`, JSON.stringify(req.headers, null, 2));
+  
+  // Log response
+  const originalSend = res.send;
+  res.send = function(data) {
+    const responseTimestamp = new Date().toISOString();
+    console.log(`📤 [${responseTimestamp}] Response ${res.statusCode} for ${method} ${url}`);
+    if (data && typeof data === 'string' && data.length < 500) {
+      console.log(`📤 Response body: ${data}`);
+    } else if (data) {
+      console.log(`📤 Response body (truncated): ${String(data).substring(0, 500)}...`);
+    }
+    return originalSend.call(this, data);
+  };
+  
+  next();
+});
+
 // Middleware
 app.use(express.json({ limit: '10mb' })); // GitHub webhooks can be large
 app.use(express.urlencoded({ extended: true }));
