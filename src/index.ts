@@ -15,7 +15,11 @@ if (!GITHUB_WEBHOOK_SECRET) {
 // Create Express app
 const app = express();
 
-// Request logging middleware
+// Middleware
+app.use(express.json({ limit: '10mb' })); // GitHub webhooks can be large
+app.use(express.urlencoded({ extended: true }));
+
+// Request logging middleware (after JSON parsing)
 app.use((req, res, next) => {
   const timestamp = new Date().toISOString();
   const method = req.method;
@@ -53,10 +57,6 @@ app.use((req, res, next) => {
   
   next();
 });
-
-// Middleware
-app.use(express.json({ limit: '10mb' })); // GitHub webhooks can be large
-app.use(express.urlencoded({ extended: true }));
 
 // Initialize routes
 const webhookRoutes = new WebhookRoutes(GITHUB_WEBHOOK_SECRET, APPS_DIR);
