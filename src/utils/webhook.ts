@@ -17,7 +17,7 @@ export class WebhookValidator {
     }
 
     const expectedSignature = this.generateSignature(payload);
-    const providedSignature = signature.replace('=', '');
+    const providedSignature = signature.replace('sha256=', '');
 
     console.log('Expected signature:', expectedSignature);
     console.log('Provided signature:', providedSignature);
