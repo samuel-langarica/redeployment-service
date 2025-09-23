@@ -164,4 +164,32 @@ export class DockerManager {
       return `Error getting status: ${error.message}`;
     }
   }
+
+  /**
+   * Fix common Python package issues
+   */
+  async fixPythonPackageIssues(repoPath: string, repoName: string): Promise<string> {
+    try {
+      const fixes: string[] = [];
+      
+      // Check if app/__init__.py exists
+      try {
+        await execAsync(`test -f "${repoPath}/app/__init__.py"`);
+      } catch {
+        // Create app/__init__.py if it doesn't exist
+        await execAsync(`touch "${repoPath}/app/__init__.py"`);
+        fixes.push('Created app/__init__.py');
+      }
+      
+      // Check if there are other common Python package issues
+      const { stdout: pyFiles } = await execAsync(`find "${repoPath}" -name "*.py" -path "*/app/*" | head -10`);
+      if (pyFiles.trim()) {
+        fixes.push(`Found Python files in app/: ${pyFiles.split('\n').length} files`);
+      }
+      
+      return fixes.length > 0 ? fixes.join(', ') : 'No fixes needed';
+    } catch (error: any) {
+      return `Error fixing Python package issues: ${error.message}`;
+    }
+  }
 }

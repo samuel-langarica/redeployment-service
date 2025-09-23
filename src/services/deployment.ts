@@ -86,6 +86,13 @@ export class DeploymentService {
       
       console.log(`Pulled ${repo.name}`);
       
+      // Fix common Python package issues before deployment
+      console.log(`🔧 Checking for Python package issues in ${repo.name}`);
+      const fixResult = await this.dockerManager.fixPythonPackageIssues(repo.path, repo.name);
+      if (fixResult !== 'No fixes needed') {
+        console.log(`🔧 Applied fixes: ${fixResult}`);
+      }
+      
       // Deploy with Docker Compose
       const deployResult = await this.dockerManager.deployRepository(repo.path, repo.name);
       
