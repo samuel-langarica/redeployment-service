@@ -19,6 +19,9 @@ export class WebhookValidator {
     const expectedSignature = this.generateSignature(payload);
     const providedSignature = signature.replace('=', '');
 
+    console.log('Expected signature:', expectedSignature);
+    console.log('Provided signature:', providedSignature);
+
     // Use timing-safe comparison to prevent timing attacks
     return this.timingSafeEqual(expectedSignature, providedSignature);
   }

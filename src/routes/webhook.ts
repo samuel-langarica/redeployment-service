@@ -23,6 +23,7 @@ export class WebhookRoutes {
 
       // Verify webhook signature
       if (!this.webhookValidator.verifySignature(payload, signature)) {
+        
         console.error('Invalid webhook signature');
         res.status(401).json({ error: 'Invalid signature' });
         return;
