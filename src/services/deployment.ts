@@ -89,9 +89,13 @@ export class DeploymentService {
       // Deploy with Docker Compose
       const deployResult = await this.dockerManager.deployRepository(repo.path, repo.name);
       
+      // Always get debugging info to help diagnose issues
+      console.log(`🔍 Getting debug info for ${repo.name}`);
+      const debugInfo = await this.dockerManager.getContainerDebugInfo(repo.path, repo.name);
+      console.log(`📋 Debug info for ${repo.name}:`, debugInfo);
+      
       // If deployment failed, get additional debugging info
       if (!deployResult.success) {
-        console.log(`🔍 Getting debug info for failed deployment: ${repo.name}`);
         const logs = await this.dockerManager.getContainerLogs(repo.path, repo.name, 100);
         const status = await this.dockerManager.getContainerStatus(repo.path, repo.name);
         

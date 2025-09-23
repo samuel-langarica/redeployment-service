@@ -119,6 +119,38 @@ export class DockerManager {
   }
 
   /**
+   * Get detailed container information for debugging
+   */
+  async getContainerDebugInfo(repoPath: string, repoName: string): Promise<string> {
+    try {
+      const commands = [
+        `cd "${repoPath}" && docker compose ps -a`,
+        `cd "${repoPath}" && docker compose config`,
+        `cd "${repoPath}" && ls -la`,
+        `cd "${repoPath}" && find . -name "*.py" -o -name "app*" -o -name "main*" | head -20`,
+        `cd "${repoPath}" && ls -la app/ 2>/dev/null || echo "app directory not found"`,
+        `cd "${repoPath}" && ls -la app/main.py 2>/dev/null || echo "app/main.py not found"`,
+        `cd "${repoPath}" && ls -la app/__init__.py 2>/dev/null || echo "app/__init__.py not found"`
+      ];
+      
+      let debugInfo = `=== Debug Info for ${repoName} ===\n`;
+      
+      for (const cmd of commands) {
+        try {
+          const { stdout } = await execAsync(cmd, { timeout: 5000 });
+          debugInfo += `\n--- ${cmd} ---\n${stdout}\n`;
+        } catch (error: any) {
+          debugInfo += `\n--- ${cmd} ---\nError: ${error.message}\n`;
+        }
+      }
+      
+      return debugInfo;
+    } catch (error: any) {
+      return `Error getting debug info: ${error.message}`;
+    }
+  }
+
+  /**
    * Check if containers are running
    */
   async getContainerStatus(repoPath: string, repoName: string): Promise<string> {
