@@ -66,11 +66,27 @@ export class GitManager {
     try {
       console.log(`🔍 Checking if ${name} is a git repository...`);
       
-      // Check if it's a git repository
-      const { stdout: isGitRepo } = await execAsync(`cd "${path}" && git rev-parse --is-inside-work-tree 2>/dev/null || echo "false"`);
-      console.log(`📋 Git repo check result for ${name}: ${isGitRepo.trim()}`);
+      // Check if it's a git repository - try multiple methods
+      let isGitRepo = false;
       
-      if (isGitRepo.trim() !== 'true') {
+      try {
+        // Method 1: Check if .git directory exists
+        const { stdout: gitDirCheck } = await execAsync(`test -d "${path}/.git" && echo "true" || echo "false"`);
+        if (gitDirCheck.trim() === 'true') {
+          isGitRepo = true;
+          console.log(`📋 ${name} has .git directory`);
+        } else {
+          // Method 2: Try git rev-parse
+          const { stdout: revParseCheck } = await execAsync(`cd "${path}" && git rev-parse --is-inside-work-tree 2>/dev/null || echo "false"`);
+          isGitRepo = revParseCheck.trim() === 'true';
+          console.log(`📋 Git rev-parse result for ${name}: ${revParseCheck.trim()}`);
+        }
+      } catch (error) {
+        console.log(`📋 Error checking git status for ${name}:`, error);
+        isGitRepo = false;
+      }
+      
+      if (!isGitRepo) {
         console.log(`❌ ${name} is not a git repository`);
         return null;
       }

@@ -3,9 +3,10 @@ services:
     build: .
     ports:
       - "5.78.108.80:3000:3000"
+    user: "${UID:-1000}:${GID:-1000}"  # Run as the same user as the host
     volumes:
       # Mount SSH keys for GitHub access
-      - ~/.ssh:/root/.ssh:ro
+      - ~/.ssh:/home/node/.ssh:ro
       # Mount apps directory (parent directory of redeployment-service)
       - ~/apps:/apps:rw
       # Mount Docker socket for Docker operations

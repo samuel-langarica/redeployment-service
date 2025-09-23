@@ -25,6 +25,7 @@ RUN adduser -S redeployment -u 1001
 
 # Set up SSH directory
 RUN mkdir -p /root/.ssh && chmod 700 /root/.ssh
+RUN mkdir -p /home/redeployment/.ssh && chmod 700 /home/redeployment/.ssh
 
 # Switch to non-root user
 USER redeployment
