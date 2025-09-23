@@ -27,17 +27,12 @@ app.post('/github-webhook', (req, res) => {
   webhookRoutes.handleGitHubWebhook(req, res);
 });
 
-app.get('/github-webhook/health', (req, res) => {
-  webhookRoutes.healthCheck(req, res);
-});
-
-app.get('/github-webhook/repositories', (req, res) => {
-  webhookRoutes.getRepositoriesStatus(req, res);
-});
-
-// Health endpoint for Traefik routing (after strip prefix)
 app.get('/health', (req, res) => {
   webhookRoutes.healthCheck(req, res);
+});
+
+app.get('/repositories', (req, res) => {
+  webhookRoutes.getRepositoriesStatus(req, res);
 });
 
 // Root endpoint
@@ -49,7 +44,7 @@ app.get('/', (req, res) => {
     endpoints: {
       webhook: 'http://5.78.108.80:3000/github-webhook',
       health: 'http://5.78.108.80:3000/health',
-      repositories: 'http://5.78.108.80:3000/github-webhook/repositories'
+      repositories: 'http://5.78.108.80:3000/repositories'
     }
   });
 });
@@ -77,7 +72,7 @@ app.listen(PORT, () => {
   console.log(`📁 Monitoring apps directory: ${APPS_DIR}`);
   console.log(`🔗 Webhook endpoint: http://5.78.108.80:3000/github-webhook`);
   console.log(`❤️  Health check: http://5.78.108.80:3000/health`);
-  console.log(`📊 Repositories status: http://5.78.108.80:3000/github-webhook/repositories`);
+  console.log(`📊 Repositories status: http://5.78.108.80:3000/repositories`);
 });
 
 // Graceful shutdown
