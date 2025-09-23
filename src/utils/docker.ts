@@ -29,6 +29,15 @@ export class DockerManager {
         { timeout: 30000 }
       ).catch(() => {}); // Ignore errors for cleanup
       
+      // Ensure files are synced to disk before building
+      console.log(`Syncing files to disk → ${repoName}`);
+      await execAsync(`cd "${repoPath}" && sync`, { timeout: 10000 }).catch(() => {});
+      
+      // Verify build context before building
+      console.log(`Verifying build context → ${repoName}`);
+      const { stdout: contextCheck } = await execAsync(`cd "${repoPath}" && ls -la app/ && test -f app/__init__.py && echo "✅ app/__init__.py exists" || echo "❌ app/__init__.py missing"`);
+      console.log(`Build context check:`, contextCheck);
+      
       // Build with no cache first, then start containers
       console.log(`docker compose build --no-cache → ${repoName}`);
       const { stdout: buildOutput, stderr: buildError } = await execAsync(
@@ -195,10 +204,14 @@ export class DockerManager {
       // Check if app/__init__.py exists
       try {
         await execAsync(`test -f "${repoPath}/app/__init__.py"`);
+        console.log(`✅ app/__init__.py exists`);
       } catch {
         // Create app/__init__.py if it doesn't exist
         await execAsync(`touch "${repoPath}/app/__init__.py"`);
+        // Verify it was created
+        await execAsync(`test -f "${repoPath}/app/__init__.py"`);
         fixes.push('Created app/__init__.py');
+        console.log(`✅ Created and verified app/__init__.py`);
       }
       
       // Check if there are other common Python package issues
