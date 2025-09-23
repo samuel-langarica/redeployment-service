@@ -19,16 +19,10 @@ COPY src/ ./src/
 # Build the application
 RUN npm run build
 
-# Create non-root user
-RUN addgroup -g 1001 -S nodejs
-RUN adduser -S redeployment -u 1001
-
 # Set up SSH directory
 RUN mkdir -p /root/.ssh && chmod 700 /root/.ssh
-RUN mkdir -p /home/redeployment/.ssh && chmod 700 /home/redeployment/.ssh
 
-# Switch to non-root user
-USER redeployment
+# Run as root to match repository ownership
 
 # Expose port
 EXPOSE 3000
