@@ -29,12 +29,18 @@ export class DockerManager {
         { timeout: 300000 } // 5 minute timeout for build
       );
       
-      if (upError) {
+      // Docker Compose writes progress to stderr even on success, so we need to check for actual errors
+      if (upError && (upError.includes('ERROR') || upError.includes('error') || upError.includes('failed'))) {
         console.error(`Error during docker compose up for ${repoName}:`, upError);
         return {
           success: false,
           message: `Docker Compose error: ${upError}`
         };
+      }
+      
+      // Log the output for debugging
+      if (upError) {
+        console.log(`Docker Compose output for ${repoName}:`, upError);
       }
       
       console.log(`Successfully deployed ${repoName}`);
