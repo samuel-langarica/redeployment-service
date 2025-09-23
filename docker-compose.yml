@@ -2,11 +2,11 @@ services:
   redeployment-service:
     build: .
     ports:
-      - "3000:3000"  # Expose port 3000 directly
+      - "5.78.108.80:3000:3000"
     volumes:
       # Mount SSH keys for GitHub access
       - ~/.ssh:/root/.ssh:ro
-      # Mount apps directory
+      # Mount apps directory (parent directory of redeployment-service)
       - ~/apps:/apps:rw
       # Mount Docker socket for Docker operations
       - /var/run/docker.sock:/var/run/docker.sock:ro
